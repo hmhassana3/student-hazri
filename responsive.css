@@ -1,121 +1,94 @@
-/* ===========================
-   Phone (default) = original
-   =========================== */
+/* Phone = original (default) */
 
-/* ===========================
-   Laptop / Desktop (≥ 900px)
-   Safer layout – no flex-direction change on body
-   =========================== */
+/* Desktop / Laptop */
 @media (min-width: 900px) {
 
   body {
-    max-width: 1100px;
-    margin: 0 auto;
+    max-width: 1080px !important;
+    margin: 0 auto !important;
   }
 
-  /* Left sidebar navigation */
-  nav {
-    position: fixed;
-    left: max(0px, calc(50% - 550px));   /* align with the centered body */
-    top: 0;
-    bottom: 0;
-    width: 200px;
-    max-width: 200px;
-    transform: none;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    padding: 16px 10px;
-    border-top: none;
-    border-right: 1px solid var(--bd);
-    background: var(--card);
-    gap: 2px;
-    z-index: 20;
+  /* Sidebar */
+  nav#nav {
+    position: fixed !important;
+    left: max(0px, calc((100vw - 1080px) / 2)) !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 200px !important;
+    max-width: 200px !important;
+    transform: none !important;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    padding: 18px 12px !important;
+    border-top: none !important;
+    border-right: 1px solid var(--bd) !important;
+    background: var(--card) !important;
+    gap: 4px !important;
+    z-index: 30 !important;
+    display: flex !important;
   }
 
-  nav button {
+  nav#nav button {
     flex-direction: row !important;
-    justify-content: flex-start;
-    gap: 12px;
-    padding: 11px 12px;
-    font-size: 14px;
-    border-radius: 12px;
-    width: 100%;
-    height: auto;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    padding: 12px 14px !important;
+    font-size: 14px !important;
+    border-radius: 12px !important;
+    width: 100% !important;
   }
 
-  nav button span {
-    font-size: 14px;
+  nav#nav button span {
+    font-size: 14px !important;
   }
 
-  nav .plus span {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+  nav#nav .plus span {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 10px !important;
   }
 
-  nav button.on {
-    background: color-mix(in srgb, var(--pr) 14%, transparent);
-    color: var(--pr);
+  nav#nav button.on {
+    background: color-mix(in srgb, var(--pr) 15%, transparent) !important;
+    color: var(--pr) !important;
   }
 
-  /* Shift header + main to the right of sidebar */
+  /* Content area shifts right */
   header {
-    margin-left: 200px;
-    border-radius: 0 0 14px 14px;
+    margin-left: 200px !important;
+    width: calc(100% - 200px) !important;
+    max-width: none !important;
   }
 
-  main {
-    margin-left: 200px;
-    padding: 20px 24px 40px;
-    max-width: 900px;
+  main#app {
+    margin-left: 200px !important;
+    width: calc(100% - 200px) !important;
+    max-width: none !important;
+    padding: 20px 28px 50px !important;
   }
 
-  /* Wider stats on desktop */
   .grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 1fr) !important;
   }
 
-  /* Modal becomes centered dialog */
   #md {
-    align-items: center;
-    justify-content: center;
+    align-items: center !important;
+    justify-content: center !important;
   }
   #md > div {
-    max-width: 460px;
-    border-radius: 18px;
-    margin: 16px;
-    max-height: 80vh;
-    overflow-y: auto;
-  }
-
-  #tt {
-    bottom: 30px;
+    max-width: 480px !important;
+    border-radius: 18px !important;
+    margin: 20px !important;
+    max-height: 82vh !important;
+    overflow-y: auto !important;
   }
 }
 
-/* When nav is hidden (detail pages) – expand content */
+/* Detail pages (nav hidden) – full width */
 @media (min-width: 900px) {
   body:has(nav[style*="display: none"]) header,
-  body:has(nav[style*="display: none"]) main {
+  body:has(nav[style*="display: none"]) main#app {
     margin-left: 0 !important;
-  }
-}
-
-/* Very large screens */
-@media (min-width: 1400px) {
-  body {
-    max-width: 1280px;
-  }
-  nav {
-    left: max(0px, calc(50% - 640px));
-    width: 220px;
-    max-width: 220px;
-  }
-  header, main {
-    margin-left: 220px;
-  }
-  main {
-    max-width: 1000px;
+    width: 100% !important;
   }
 }
