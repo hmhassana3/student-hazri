@@ -1,101 +1,121 @@
-/* Phone = current design (default) */
+/* ===========================
+   Phone (default) = original
+   =========================== */
 
-/* Laptop / Desktop */
+/* ===========================
+   Laptop / Desktop (≥ 900px)
+   Safer layout – no flex-direction change on body
+   =========================== */
 @media (min-width: 900px) {
+
   body {
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
-    flex-direction: row;
-    height: 100vh;
-    overflow: hidden;
   }
-  header {
-    position: fixed;
-    top: 0;
-    left: 220px;
-    right: 0;
-    max-width: calc(1200px - 220px);
-    margin: 0 auto;
-    z-index: 10;
-    border-radius: 0 0 16px 16px;
-    box-shadow: 0 2px 12px rgba(0,0,0,.08);
-  }
-  main {
-    margin-left: 220px;
-    margin-top: 64px;
-    padding: 24px 28px 40px;
-    height: calc(100vh - 64px);
-    overflow-y: auto;
-    width: calc(100% - 220px);
-    max-width: 980px;
-  }
+
+  /* Left sidebar navigation */
   nav {
     position: fixed;
-    left: 0;
+    left: max(0px, calc(50% - 550px));   /* align with the centered body */
     top: 0;
     bottom: 0;
-    width: 220px;
-    max-width: 220px;
+    width: 200px;
+    max-width: 200px;
     transform: none;
     flex-direction: column;
     justify-content: flex-start;
-    padding: 20px 12px;
+    align-items: stretch;
+    padding: 16px 10px;
     border-top: none;
     border-right: 1px solid var(--bd);
     background: var(--card);
-    gap: 4px;
-    z-index: 15;
+    gap: 2px;
+    z-index: 20;
   }
+
   nav button {
-    flex-direction: row;
+    flex-direction: row !important;
     justify-content: flex-start;
     gap: 12px;
-    padding: 12px 14px;
+    padding: 11px 12px;
     font-size: 14px;
     border-radius: 12px;
     width: 100%;
+    height: auto;
   }
-  nav button span { font-size: 14px; }
+
+  nav button span {
+    font-size: 14px;
+  }
+
   nav .plus span {
-    width: 36px;
-    height: 36px;
+    width: 34px;
+    height: 34px;
     border-radius: 10px;
   }
+
   nav button.on {
-    background: color-mix(in srgb, var(--pr) 12%, transparent);
+    background: color-mix(in srgb, var(--pr) 14%, transparent);
+    color: var(--pr);
   }
-  .grid { grid-template-columns: repeat(4, 1fr); }
-  .card, .stat, .hero { border-radius: 18px; }
-  #md { align-items: center; justify-content: center; }
+
+  /* Shift header + main to the right of sidebar */
+  header {
+    margin-left: 200px;
+    border-radius: 0 0 14px 14px;
+  }
+
+  main {
+    margin-left: 200px;
+    padding: 20px 24px 40px;
+    max-width: 900px;
+  }
+
+  /* Wider stats on desktop */
+  .grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* Modal becomes centered dialog */
+  #md {
+    align-items: center;
+    justify-content: center;
+  }
   #md > div {
-    max-width: 480px;
-    border-radius: 20px;
-    margin: 20px;
-    max-height: 85vh;
+    max-width: 460px;
+    border-radius: 18px;
+    margin: 16px;
+    max-height: 80vh;
     overflow-y: auto;
   }
-  #tt { bottom: 40px; }
+
+  #tt {
+    bottom: 30px;
+  }
 }
 
-/* When sidebar hidden (detail pages) */
+/* When nav is hidden (detail pages) – expand content */
 @media (min-width: 900px) {
   body:has(nav[style*="display: none"]) header,
   body:has(nav[style*="display: none"]) main {
-    left: 0 !important;
     margin-left: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-  body:has(nav[style*="display: none"]) header {
-    max-width: 1200px;
-    left: 50%;
-    transform: translateX(-50%);
   }
 }
 
+/* Very large screens */
 @media (min-width: 1400px) {
-  body { max-width: 1320px; }
-  header { left: 240px; max-width: calc(1320px - 240px); }
-  main { margin-left: 240px; width: calc(100% - 240px); max-width: 1080px; }
-  nav { width: 240px; max-width: 240px; }
+  body {
+    max-width: 1280px;
+  }
+  nav {
+    left: max(0px, calc(50% - 640px));
+    width: 220px;
+    max-width: 220px;
+  }
+  header, main {
+    margin-left: 220px;
+  }
+  main {
+    max-width: 1000px;
+  }
 }
