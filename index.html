@@ -4,13 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f766e">
-<title>Student Hazri Manager</title>
+<title>Hazri Manager</title>
 <link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="16x16" href="icon-192.png">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#f3f6f5;--card:#fff;--tx:#12211f;--mu:#647572;--pr:#0f766e;--pr2:#14b8a6;--ok:#16a34a;--no:#dc2626;--bd:#e0e7e5;--wa:#d97706}
@@ -74,7 +70,7 @@ ur:{app:'حاضری منیجر',home:'ہوم',classes:'کلاسز',add:'نیا',
 let S=JSON.parse(localStorage.getItem('hazri')||'null')||{lang:'en',theme:'light',classes:[]};
 const save=()=>localStorage.setItem('hazri',JSON.stringify(S));
 const t=k=>(T[S.lang]||T.en)[k]||T.en[k]||k;
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c]));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>Math.random().toString(36).slice(2,9);
 const tod=()=>{const d=new Date();return new Date(d-d.getTimezoneOffset()*6e4).toISOString().slice(0,10)};
 let R={v:'home'},H=[],q='',att=null,qs='',SS='pctd',G={type:'bar'},dp=null;
@@ -152,4 +148,119 @@ function drawS(){
  if(sec)l=l.filter(x=>x.s.sec===R.s);
  const k=qs.trim().toLowerCase().replace(/^#/,'');
  if(k)l=l.filter(x=>[x.s.name,x.s.father,x.s.roll,x.s.cr,x.s.phone,x.c.code,x.c.name].some(v=>String(v||'').toLowerCase().includes(k)));
- 
+ const nz=v=>v==null?-1:v;
+ const so={pctd:(a,b)=>nz(b.pct)-nz(a.pct),pcta:(a,b)=>nz(a.pct)-nz(b.pct),abs:(a,b)=>b.a-a.a,name:(a,b)=>a.s.name.localeCompare(b.s.name),cls:(a,b)=>a.c.name.localeCompare(b.c.name)||a.s.name.localeCompare(b.s.name)};
+ l.sort(sec?(a,b)=>String(a.s.roll).localeCompare(String(b.s.roll),undefined,{numeric:true}):R.v==='rank'?so.pctd:so[SS]);
+ $('sl').innerHTML=l.length?l.map((x,i)=>srow(x,R.v==='rank'?i+1:0)).join(''):`<div class=empty>${sec?t('noStu'):t('none')}</div>`}
+const sb=()=>`<input placeholder="${t('search2')}" value="${esc(qs)}" oninput="qs=this.value;drawS()">`;
+function vStudents(){return sb()+`<select onchange="SS=this.value;drawS()">${[['pctd','s1'],['pcta','s2'],['abs','s3'],['name','s4'],['cls','s5']].map(([k,l])=>`<option value=${k} ${SS===k?'selected':''}>${t(l)}</option>`).join('')}</select><div id=sl></div>`}
+function vRank(c){const l=allS([c]).filter(x=>x.n).sort((a,b)=>b.pct-a.pct);
+ const f=(lb,x)=>x?`<div class="card row" onclick="go('stu',{c:'${c.id}',st:'${x.s.id}'})"><div class=sp><small class=mu>${lb}</small><br><b>${esc(x.s.name)}</b></div>${pillP(x.pct)}</div>`:'';
+ return `<div class="card row"><b class=sp>${t('pct')}</b>${pillP(clsPct(c))}</div>${f(t('top'),l[0])}${l.length>1?f(t('lowest'),l.at(-1)):''}${sb()}<div id=sl></div>`}
+function vToday(){const d=tod();let h='';live().forEach(c=>c.sessions.filter(x=>x.date===d).forEach(x=>{const ms=Object.entries(x.marks),ab=ms.filter(([,m])=>m.s==='A'),sc=secOf(c,x.sec).name;
+ h+=`<div class=card><div class=row onclick="go('sec',{c:'${c.id}',s:'${x.sec}'})"><div class=sp><b>${esc(c.name+(sc?' '+sc:''))}</b> <span class=tag>${esc(x.title||'—')}</span></div><span class="pill g">${ms.length-ab.length}</span><span class="pill r">${ab.length}</span></div>${ab.map(([id,m])=>{const s=c.students.find(z=>z.id===id);return s?`<div class=row style="padding-top:8px" onclick="go('stu',{c:'${c.id}',st:'${id}'})"><span class=tag>${esc(s.roll)}</span><div class=sp><b>${esc(s.name)}</b><br><small class=mu>${esc(m.r||'—')}</small></div></div>`:''}).join('')}</div>`}));return h||`<div class=empty>${t('none')}</div>`}
+// CLASSES
+function vClasses(){return `<input id=q placeholder="${t('search')}" value="${esc(q)}" oninput="q=this.value;drawList()"><div id=cl></div>`}
+function drawList(){
+ const s=q.trim().toLowerCase().replace(/^#/,'');
+ const l=live().filter(c=>!s||c.name.toLowerCase().includes(s)||c.code.toLowerCase().includes(s)||c.level.toLowerCase().includes(s))
+  .sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||b.opens-a.opens);
+ $('cl').innerHTML=l.length?l.map(c=>`<div class="card row" onclick="openC('${c.id}')"><div class=sp><b>${esc(c.name)}</b> <span class=tag>#${esc(c.code)}</span><br><small class=mu>${esc(c.level)} · ${c.students.length} ${t('students')} · ${c.sections.length} ${t('sec')}</small><div class=bar><i style="width:${clsPct(c)||0}%"></i></div></div>
+ <button class="ib ${c.pinned?'on':''}" title="${t('pin')}" onclick="event.stopPropagation();pinC('${c.id}')">${ic('pin')}</button>
+ <button class="ib rm" title="${t('rm')}" onclick="event.stopPropagation();rmC('${c.id}')">${ic('trash')}</button></div>`).join(''):`<div class=empty>${t('nc')}</div>`}
+function pinC(id){const c=cl(id);c.pinned=!c.pinned;save();drawList()}
+function rmC(id){ask(t('sure'),()=>{cl(id).trashed=Date.now();cl(id).pinned=false;save();drawList();toast(t('moved'))},t('rm'))}
+function openC(id){const c=cl(id);c.opens++;save();if(c.sections.length>1)go('class',{c:id});else go('sec',{c:id,s:c.sections[0].id})}
+function vPick(c){return `<h3>${t('sec')}</h3>`+c.sections.map(s=>`<div class="card row" onclick="go('sec',{c:'${c.id}',s:'${s.id}'})"><b class=sp>${esc(s.name)}</b><span class=tag>${c.students.filter(x=>x.sec===s.id).length} ${t('students')}</span></div>`).join('')}
+// ADD CLASS
+function vAdd(){return `<div class=card><label>${t('cn')} *</label><input id=n><label>${t('lv')} *</label><input id=lv><label>${t('code')} *</label><input id=cd><label>${t('nsec')}</label><select id=ns onchange="secFields()">${[1,2,3,4,5,6,7,8].map(i=>`<option>${i}</option>`).join('')}</select><div id=sf></div><button class="btn w" onclick="addC()">${t('save')}</button></div>`}
+function secFields(){const n=+$('ns').value;$('sf').innerHTML=n>1?Array.from({length:n},(_,i)=>`<label>${t('sname')} ${i+1}</label><input class=sn value="${String.fromCharCode(65+i)}">`).join(''):''}
+function addC(){
+ const n=$('n').value.trim(),lv=$('lv').value.trim(),cd=$('cd').value.trim().replace(/^#/,'');
+ if(!n||!lv||!cd)return toast(t('fill'));
+ if(S.classes.some(c=>c.code.toLowerCase()===cd.toLowerCase()))return toast(t('codeUsed'));
+ const names=[...document.querySelectorAll('.sn')].map(i=>i.value.trim()).filter(Boolean);
+ const sections=names.length>1?names.map(x=>({id:uid(),name:x})):[{id:uid(),name:''}];
+ S.classes.push({id:uid(),name:n,level:lv,code:cd,sections,pinned:false,opens:0,trashed:null,students:[],sessions:[]});save();toast(t('saved'));tab('classes')}
+// SECTION
+function vSec(c){
+ const n=c.students.filter(x=>x.sec===R.s).length;
+ const ss=c.sessions.filter(x=>x.sec===R.s).sort((a,b)=>b.date.localeCompare(a.date)||b.ts-a.ts);
+ return `<div class=row style="margin-bottom:10px"><button class="btn sp" onclick="startAtt('${c.id}','${R.s}')" ${n?'':'disabled'}>${ic('ok')} ${t('take')}</button><button class="btn o sp" onclick="stuForm('${c.id}','${R.s}')">${ic('plus')} ${t('addStu')}</button></div>${sb()}<div id=sl></div>
+ ${ss.length?`<h3>${t('hist')}</h3>`+ss.map(x=>{const v=Object.values(x.marks),p=v.filter(m=>m.s==='P').length;return `<div class="card row"><div class=sp><b>${esc(x.title||'—')}</b><br><small class=mu>${x.date}</small></div><span class="pill g">${p}</span><span class="pill r">${v.length-p}</span><button class="ib rm" onclick="delSes('${c.id}','${x.id}')">${ic('trash')}</button></div>`}).join(''):''}`}
+function delSes(cid,id){ask(t('sure'),()=>{const c=cl(cid);c.sessions=c.sessions.filter(x=>x.id!==id);save();draw()},t('del'))}
+function stuForm(cid,sec){modal(`<label>${t('name')} *</label><input id=sn1><label>${t('father')} *</label><input id=sf1><label>${t('roll')} *</label><input id=sr1><label>${t('phone')}</label><input id=sp1 type=tel><label>${t('cr')}</label><input id=sc1><div class=row><button class="btn o sp" onclick="mc()">${t('cancel')}</button><button class="btn sp" onclick="addS('${cid}','${sec}')">${t('save')}</button></div>`)}
+function addS(cid,sec){const v=i=>$(i).value.trim();if(!v('sn1')||!v('sf1')||!v('sr1'))return toast(t('fill'));
+ cl(cid).students.push({id:uid(),sec,name:v('sn1'),father:v('sf1'),roll:v('sr1'),phone:v('sp1'),cr:v('sc1')});save();mc();draw()}
+// ATTENDANCE
+function startAtt(cid,sec){att={c:cid,s:sec,date:tod(),title:'',marks:{}};go('att',{c:cid,s:sec})}
+function vAtt(c){
+ const st=c.students.filter(x=>x.sec===att.s).sort((a,b)=>String(a.roll).localeCompare(String(b.roll),undefined,{numeric:true}));
+ return `<div class=card><label>${t('date')}</label><input type=date id=ad value="${att.date}" onchange="att.date=this.value"><label>${t('lect')}</label><input id=at1 value="${esc(att.title)}" oninput="att.title=this.value"></div>
+ <button class="btn o s np" style="margin-bottom:10px" onclick="attAll()">${t('allP')}</button>
+ ${st.map(s=>{const m=att.marks[s.id];return `<div class="card row"><span class=tag>${esc(s.roll)}</span><div class=sp><b>${esc(s.name)}</b><br><small class=mu>${t('fa')}: ${esc(s.father)}</small></div><button class="mk p ${m&&m.s==='P'?'on':''}" onclick="mkP('${s.id}')">${ic('ok')}</button><button class="mk a ${m&&m.s==='A'?'on':''}" onclick="mkA('${s.id}')">${ic('x')}</button></div>`}).join('')}
+ <button class="btn w" onclick="saveAtt()">${t('save')} (${Object.values(att.marks).filter(m=>m.s==='P').length}/${st.length})</button>`}
+function attAll(){cl(att.c).students.filter(x=>x.sec===att.s).forEach(s=>att.marks[s.id]={s:'P'});draw()}
+function mkP(id){att.marks[id]={s:'P'};draw()}
+function mkA(id){modal(`<p><b>${t('reason')}</b></p><textarea id=rs rows=3></textarea><div class=row><button class="btn o sp" onclick="mc()">${t('cancel')}</button><button class="btn sp" onclick="att.marks['${id}']={s:'A',r:$('rs').value.trim()};mc();draw()">${t('ok')}</button></div>`)}
+function saveAtt(){const c=cl(att.c),n=c.students.filter(x=>x.sec===att.s).length;
+ if(Object.keys(att.marks).length<n)return toast(t('mark'));
+ c.sessions.push({id:uid(),ts:Date.now(),sec:att.s,date:att.date,title:att.title,marks:att.marks});save();toast(t('saved'));back()}
+// STUDENT
+function vStu(c,s){const x=stOf(c,s),sc=secOf(c,s.sec);
+ const r=(l,v)=>`<div class=row style="padding:6px 0"><span class="mu sp">${l}</span><b>${esc(v||'—')}</b></div>`;
+ return `<div class=card>${r(t('inCls'),c.name+(sc.name?' · '+sc.name:''))}${r(t('roll'),s.roll)}${r(t('father'),s.father)}${r(t('cr'),s.cr)}
+ <div class=row style="padding:6px 0"><span class="mu sp">${t('phone')}</span><b>${esc(s.phone||'—')}</b>${s.phone?`<a class="btn s" href="tel:${esc(s.phone)}">${ic('phone')} ${t('call')}</a>`:''}</div></div>
+ <div class=grid><div class=stat><b style="color:var(--ok)">${x.p}</b><small>${t('pres')}</small></div><div class=stat><b style="color:var(--no)">${x.a}</b><small>${t('abs')}</small></div></div>
+ <div class=card><div class=row><b class=sp>${t('pct')}</b>${pillP(x.pct)}</div><div class=bar><i style="width:${x.pct||0}%"></i></div></div>
+ <h3>${t('absDays')}</h3>${x.ds.length?x.ds.sort((a,b)=>b.d.localeCompare(a.d)).map(d=>`<div class=card><b>${d.d}</b> <span class=tag>${esc(d.l||'—')}</span><br><small class=mu>${esc(d.r||'—')}</small></div>`).join(''):`<div class=empty>${t('none')}</div>`}
+ <button class="btn d w" onclick="ask(t('sure'),()=>{c_=cl('${c.id}');c_.students=c_.students.filter(z=>z.id!=='${s.id}');save();back()},t('del'))">${ic('trash')} ${t('del')}</button>`}
+// REPORTS
+let RP={type:'month',month:tod().slice(0,7),year:tod().slice(0,4),c:'all',q:''};
+function vReports(){return `<div class=pr><h2>${t('app')} — ${t('reports')} ${RP.type==='month'?RP.month:RP.year}</h2></div>`+`<div class=card><div class=row><div class=sp><label>${t('month')} / ${t('year')}</label><select onchange="RP.type=this.value;draw()"><option value=month ${RP.type==='month'?'selected':''}>${t('month')}</option><option value=year ${RP.type==='year'?'selected':''}>${t('year')}</option></select></div><div class=sp><label>&nbsp;</label>${RP.type==='month'?`<input type=month value="${RP.month}" onchange="RP.month=this.value;draw()">`:`<input type=number value="${RP.year}" onchange="RP.year=this.value;draw()">`}</div></div>
+ <select onchange="RP.c=this.value;draw()"><option value=all>${t('all')}</option>${live().map(c=>`<option value="${c.id}" ${RP.c===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select>
+ <input placeholder="${t('search2')}" value="${esc(RP.q)}" oninput="RP.q=this.value;$('rt').innerHTML=rtab()">
+ <div class=row><button class="btn sp" onclick="csv()">${t('dl')}</button><button class="btn o sp" onclick="graphAll()">${ic('chart')} ${t('graph')}</button></div><div class=row style="margin-top:8px"><button class="btn o sp" onclick="print()">${t('print')}</button><button class="btn o sp" onclick="csv(1)">${t('share')}</button></div></div><div class="card sc" id=rt>${rtab()}</div>`}
+function rtab(){return `<table><tr><th>${t('inCls')}</th><th>${t('roll')}</th><th>${t('name')}</th><th>${t('pres')}</th><th>${t('abs')}</th><th>%</th></tr>${rows().map(r=>`<tr style="cursor:pointer" onclick="graphStu('${r[7]}','${r[8]}')"><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td></tr>`).join('')||`<tr><td colspan=6 class=empty>${t('none')}</td></tr>`}</table>`}
+function rows(){const pre=RP.type==='month'?RP.month:RP.year,o=[],qq=(RP.q||'').trim().toLowerCase().replace(/^#/,'');
+ live().filter(c=>RP.c==='all'||c.id===RP.c).forEach(c=>c.students.forEach(s=>{if(qq&&![c.name,c.code,s.name,s.father,s.roll,s.cr].some(v=>String(v||'').toLowerCase().includes(qq)))return;let p=0,a=0;c.sessions.forEach(x=>{if(x.sec!==s.sec||!x.date.startsWith(pre))return;const m=x.marks[s.id];if(m)m.s==='P'?p++:a++});const sc=secOf(c,s.sec).name;o.push([c.name+(sc?' '+sc:''),s.roll,s.name,s.father,p,a,p+a?Math.round(p*100/(p+a))+'%':'–',c.id,s.id])}));return o}
+const yr=()=>RP.type==='month'?RP.month.slice(0,4):RP.year;
+function graphStu(cid,sid){const c=cl(cid),s=c.students.find(z=>z.id===sid),y=yr(),lb=[],vl=[];
+ for(let m=1;m<=12;m++){const pre=y+'-'+String(m).padStart(2,'0');let p=0,a=0;c.sessions.forEach(x=>{if(x.sec!==s.sec||!x.date.startsWith(pre))return;const k=x.marks[s.id];if(k)k.s==='P'?p++:a++});lb.push(String(m));vl.push(p+a?Math.round(p*100/(p+a)):null)}
+ G={t:s.name+' — '+y+' (%)',sub:t('cr')+': '+(s.cr||'—')+' · '+t('roll')+': '+s.roll,lb,vl,type:G.type};go('graph')}
+function graphAll(){const r=rows().filter(x=>x[6]!=='–').slice(0,30);G={t:t('reports')+' (%)',lb:r.map(x=>x[1]),vl:r.map(x=>parseInt(x[6])),type:G.type};go('graph')}
+function svgChart(lb,vl,type){const W=640,Hh=260,p=34,bw=(W-2*p)/Math.max(vl.length,1),X=i=>p+bw*i+bw/2,Y=v=>Hh-p-(Hh-2*p)*v/100;let g='';
+ [0,25,50,75,100].forEach(v=>g+=`<line x1="${p}" x2="${W-p}" y1="${Y(v)}" y2="${Y(v)}" stroke="currentColor" opacity=".15"/><text x="${p-6}" y="${Y(v)+4}" font-size="10" text-anchor="end" fill="currentColor">${v}</text>`);
+ lb.forEach((l,i)=>g+=`<text x="${X(i)}" y="${Hh-p+14}" font-size="10" text-anchor="middle" fill="currentColor">${esc(l)}</text>`);
+ if(type==='bar')vl.forEach((v,i)=>{if(v!=null)g+=`<rect x="${X(i)-bw*.3}" y="${Y(v)}" width="${bw*.6}" height="${Hh-p-Y(v)}" rx="4" fill="#14b8a6"/><text x="${X(i)}" y="${Y(v)-4}" font-size="10" text-anchor="middle" fill="currentColor">${v}</text>`});
+ else{const pt=vl.map((v,i)=>v==null?null:[X(i),Y(v)]).filter(Boolean);g+=`<polyline points="${pt.map(q=>q.join(',')).join(' ')}" fill="none" stroke="#0f766e" stroke-width="2.5"/>`+pt.map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="4.5" fill="#0f766e"/>`).join('')}
+ return `<svg class="ch" viewBox="0 0 ${W} ${Hh}">${g}</svg>`}
+function vGraph(){return `<div class=card><b>${esc(G.t)}</b>${G.sub?`<br><small class=mu>${esc(G.sub)}</small>`:''}<div class=row style="margin:10px 0" ><button class="btn s sp ${G.type==='bar'?'':'o'} np" onclick="G.type='bar';draw()">${t('bar')}</button><button class="btn s sp ${G.type==='line'?'':'o'} np" onclick="G.type='line';draw()">${t('line')}</button></div>${svgChart(G.lb||[],G.vl||[],G.type)}<button class="btn w np" style="margin-top:10px" onclick="print()">${t('print')}</button></div>`}
+function csv(sh){const h=[t('inCls'),t('roll'),t('name'),t('father'),t('pres'),t('abs'),'%'];
+ const b=[h,...rows().map(r=>r.slice(0,7))].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+ (sh?shareFile:dl)('\ufeff'+b,`attendance-${RP.type==='month'?RP.month:RP.year}.csv`,'text/csv')}
+async function shareFile(name,text,type){const f=new File([text],name,{type});try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:name});return}}catch(e){if(e.name==='AbortError')return}dl(text,name,type)}
+function dl(txt,name,type){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([txt],{type}));a.download=name;a.click()}
+// SETTINGS / TRASH
+function menu(){modal(`<div class=row><b class=sp style="font-size:17px">${t('app')}</b><button class=ib onclick="mc()">${ic('x')}</button></div><div style="height:10px"></div>`+vSet())}
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e});
+function inst(){modal(`<p><b>${t('instq')}</b></p><div class=row><button class="btn o sp" onclick="mc()">${t('no')}</button><button class="btn sp" onclick="doInst()">${t('yes')}</button></div>`)}
+function doInst(){mc();if(dp){dp.prompt();dp=null;return}const sa=matchMedia('(display-mode: standalone)').matches,ios=/iphone|ipad|ipod/i.test(navigator.userAgent);modal(`<p>${sa?t('instd'):ios?t('insti'):t('insth')}</p><button class="btn w" onclick="mc()">${t('ok')}</button>`)}
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js').catch(()=>{});
+let AC;function tick(){if(S.sound===false)return;try{AC=AC||new(window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain(),n=AC.currentTime;o.frequency.value=900;g.gain.setValueAtTime(.08,n);g.gain.exponentialRampToValueAtTime(.001,n+.06);o.connect(g);g.connect(AC.destination);o.start();o.stop(n+.06)}catch(e){}}
+document.addEventListener('click',e=>{if(e.target.closest('button,.card,.stat,.hero,tr,label.btn,a,select'))tick()},true);
+function vSet(){return `<button class="btn w" style="margin-bottom:10px" onclick="inst()">${ic('plus')} ${t('inst')}</button>`+`<div class=card><label>${t('lang')}</label><select onchange="S.lang=this.value;save();draw();menu()"><option value=en ${S.lang==='en'?'selected':''}>English</option><option value=ur ${S.lang==='ur'?'selected':''}>اردو</option></select>
+ <label>${t('theme')}</label><select onchange="S.theme=this.value;save();draw();menu()"><option value=light ${S.theme==='light'?'selected':''}>${t('light')}</option><option value=dark ${S.theme==='dark'?'selected':''}>${t('dark')}</option></select><label>${t('sound')}</label><select onchange="S.sound=this.value==='1';save();menu()"><option value=1 ${S.sound!==false?'selected':''}>${t('on')}</option><option value=0 ${S.sound===false?'selected':''}>${t('off')}</option></select></div>
+ <div class="card row" onclick="mc();go('trash')" style="cursor:pointer">${ic('trash')}<b class=sp>${t('trash')}</b><span class=tag>${S.classes.filter(c=>c.trashed).length}</span></div>
+ <button class="btn w" style="margin-bottom:10px" onclick="shareFile('hazri-backup-'+tod()+'.json',JSON.stringify(S),'application/json')">${t('shareAll')}</button><button class="btn o w" style="margin-bottom:10px" onclick="dl(JSON.stringify(S),'hazri-backup-'+tod()+'.json','application/json')">${t('backup')}</button>
+ <label class="btn o w" style="margin:0">${t('restore')}<input type=file accept=.json hidden onchange="imp(this.files[0])"></label>`}
+function imp(f){if(!f)return;f.text().then(x=>{try{const d=JSON.parse(x);if(!d.classes)throw 0;S=d;save();draw();toast(t('saved'))}catch(e){toast('Invalid file')}})}
+const age=c=>Math.floor((Date.now()-c.trashed)/864e5);
+function vTrash(){const l=S.classes.filter(c=>c.trashed);return l.length?l.map(c=>`<div class="card"><div class=row><div class=sp><b>${esc(c.name)}</b> <span class=tag>#${esc(c.code)}</span><br><small class=mu>${age(c)} ${t('days')}</small></div><button class="btn s o" onclick="cl('${c.id}').trashed=null;save();draw()">${ic('ret')} ${t('restoreB')}</button><button class="ib rm" onclick="delF('${c.id}')">${ic('trash')}</button></div></div>`).join(''):`<div class=empty>${t('noTrash')}</div>`}
+function delF(id){ask(t('sure'),()=>{S.classes=S.classes.filter(c=>c.id!==id);save();draw()},t('delF'))}
+function trashCheck(){const o=S.classes.find(c=>c.trashed&&age(c)>=180);if(o)ask(`<b>${esc(o.name)}</b> ${t('old')}`,()=>delF2(o.id),t('delF'))}
+function delF2(id){S.classes=S.classes.filter(c=>c.id!==id);save();draw()}
+draw();
+</script>
+</body>
+</html>
